@@ -3,6 +3,9 @@ import { IExecDataProtectorDeserializer } from "@iexec/dataprotector-deserialize
 import { ethers } from "ethers";
 import { Redis } from "@upstash/redis";
 import { deposit } from "./deposit.js";
+// path/url not needed here; vault loading moved to utils/getVault
+import { getVault } from "./utils/getVault.js";
+import { swap } from "./swap.js";
 
 const main = async () => {
   const { IEXEC_OUT, IEXEC_APP_DEVELOPER_SECRET } = process.env;
@@ -13,37 +16,68 @@ const main = async () => {
   try {
     let messages = [];
 
+    // Access args from command line
+    const args = process.argv.slice(2); // Skip node and script name
+    // Example: iapp run myapp --args "mode=swap"
+    const action = args[0];
+
     const deserializer = new IExecDataProtectorDeserializer();
-    const functionType = await deserializer.getValue("function_type", "string");
     const provider = new ethers.JsonRpcProvider(secrets.JSON_RPC_URL);
+    const signer = new ethers.Wallet(secrets.PRIVATE_KEY, provider);
     const redis = new Redis({
       url: secrets.REDIS_URL,
       token: secrets.REDIS_TOKEN,
     });
 
-    if (functionType === "deposit") {
-      console.log("Function type: deposit");
+    // --- Load vault (contract instance) ---
+    const vaultAddress = await deserializer.getValue("vault_address", "string");
+    const vault = getVault(vaultAddress, provider).connect(signer);
 
-      const vaultAddress = await deserializer.getValue(
-        "vault_address",
-        "string"
-      );
-      console.log("Vault Address:", vaultAddress);
+    if (action === "deposit") {
+      console.log("Function type: deposit");
 
       const depositTx = await deserializer.getValue("deposit_tx", "string");
       console.log("Deposit Tx:", depositTx);
 
-      const depositResult = await deposit(
-        redis,
-        provider,
-        vaultAddress,
-        depositTx
-      );
+      const depositResult = await deposit(redis, provider, vault, depositTx);
 
       if (depositResult) {
         messages.push("Deposit processed successfully");
       } else {
         throw new Error("Deposit processing failed");
+      }
+    } else if (action === "swap") {
+      console.log("Function type: swap");
+
+      const data = await deserializer.getValue("data", "file");
+      const decoder = new TextDecoder();
+      const decodedString = decoder.decode(data);
+      const {
+        commitments,
+        tokenIn,
+        tokenOut,
+        tokenAmountIn,
+        minimumTokenOut,
+        ownerhash,
+      } = JSON.parse(decodedString);
+
+      const swapResults = await swap(
+        redis,
+        vault,
+        commitments,
+        tokenIn,
+        tokenOut,
+        tokenAmountIn,
+        minimumTokenOut,
+        ownerhash
+      );
+
+      if (!swapResults) {
+        throw new Error("Swap processing failed");
+      }
+
+      for (const { commitment, tokenOutAmount, token } of swapResults) {
+        messages.push(`${commitment},${tokenOutAmount},${token}`);
       }
     }
 

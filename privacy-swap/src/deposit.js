@@ -1,35 +1,24 @@
 import { ethers } from "ethers";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 import { Redis } from "@upstash/redis";
 import "dotenv/config";
+import { getVault } from "./utils/getVault.js";
 
 /**
  * Verify a deposit transaction on-chain via logs
+ * @param redis - Upstash Redis instance
  * @param provider - ethers provider (e.g., JsonRpcProvider)
- * @param vaultAddress - deployed CommitmentVault contract address
+ * @param vault - deployed ExecSwap contract instance
  * @param txHash - transaction hash of the deposit
  */
-export async function deposit(redis, provider, vaultAddress, txHash) {
+export async function deposit(redis, provider, vault, txHash) {
   console.log("🔍 Verifying deposit transaction:", txHash);
 
-  // --- 1. Load ABI dynamically from JSON file ---
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const abiPath = path.join(__dirname, "./abi/ExecSwap.json");
-  const contractJson = JSON.parse(fs.readFileSync(abiPath, "utf8"));
-  const abi = contractJson.abi;
-
-  // --- 2. Connect to the contract instance ---
-  const vault = new ethers.Contract(vaultAddress, abi, provider);
-
-  // --- 3. Fetch transaction receipt ---
+  // --- 1. Fetch transaction receipt ---
   const receipt = await provider.getTransactionReceipt(txHash);
   if (!receipt)
     throw new Error("Transaction not found. Check the hash or network.");
 
-  // --- 4. Parse logs and find the first Deposit event ---
+  // --- 2. Parse logs and find the first Deposit event ---
   let depositEvent = null;
   for (const log of receipt.logs) {
     try {
@@ -48,9 +37,10 @@ export async function deposit(redis, provider, vaultAddress, txHash) {
   }
 
   const { from, token, amount, ownerhash, commitmentHash } = depositEvent.args;
+  const processedKey = `processed:${commitmentHash}`;
+
   // ensure each commitment is processed only once
   try {
-    const processedKey = `processed:${commitmentHash}`;
     const already = await redis.get(processedKey);
     if (already) {
       console.log(
@@ -58,8 +48,6 @@ export async function deposit(redis, provider, vaultAddress, txHash) {
       );
       return;
     }
-    // mark as processed; set a TTL of 30 days (optional)
-    await redis.set(processedKey, "1");
   } catch (err) {
     throw new Error("Redis dedupe check failed, continuing:", err);
   }
@@ -88,13 +76,14 @@ export async function deposit(redis, provider, vaultAddress, txHash) {
 
   // --- 6. Store deposit info in Upstash Redis ---
   try {
-    const key = token.toLowerCase();
-    const existing = await redis.get(key);
+    const existing = await redis.get(token);
     if (existing === null) {
-      await redis.set(key, parseInt(formattedAmount));
+      await redis.set(token, amount.toString());
     } else {
-      await redis.incrby(key, parseInt(formattedAmount));
+      await redis.set(token, (BigInt(existing) + amount).toString());
     }
+    await redis.set(processedKey, "1");
+
     console.log("✅ Deposit info stored in Upstash Redis.");
   } catch (err) {
     throw new Error("Failed to store deposit info in Upstash Redis:", err);
@@ -108,7 +97,7 @@ export async function deposit(redis, provider, vaultAddress, txHash) {
 //   url: process.env.REDIS_URL,
 //   token: process.env.REDIS_TOKEN,
 // });
-// const provider = new ethers.JsonRpcProvider(process.env.JSON_RPC_URL);
-// const vaultAddress = process.env.VAULT_ADDRESS;
+// const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+// const vault = getVault(process.env.VAULT_ADDRESS, provider);
 // const txHash = process.env.DEPOSIT_TX;
-// deposit(redis, provider, vaultAddress, txHash);
+// deposit(redis, provider, vault, txHash);
