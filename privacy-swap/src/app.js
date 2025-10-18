@@ -6,6 +6,7 @@ import { deposit } from "./deposit.js";
 // path/url not needed here; vault loading moved to utils/getVault
 import { getVault } from "./utils/getVault.js";
 import { swap } from "./swap.js";
+import { withdraw } from "./withdraw.js";
 
 const main = async () => {
   const { IEXEC_OUT, IEXEC_APP_DEVELOPER_SECRET } = process.env;
@@ -77,7 +78,20 @@ const main = async () => {
       }
 
       for (const { commitment, tokenOutAmount, token } of swapResults) {
-        messages.push(`${commitment},${tokenOutAmount},${token}`);
+        messages.push(`${commitment},${tokenOutAmount},${token}\n`);
+      }
+    } else if (action === "withdraw") {
+      console.log("Function type: withdraw");
+
+      const withdrawTx = await deserializer.getValue("withdraw_tx", "string");
+      console.log("Withdraw Tx:", withdrawTx);
+
+      const withdrawResult = await withdraw(redis, provider, vault, withdrawTx);
+
+      if (withdrawResult) {
+        messages.push("Withdraw processed successfully");
+      } else {
+        throw new Error("Withdraw processing failed");
       }
     }
 

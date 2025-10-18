@@ -37,14 +37,14 @@ export async function deposit(redis, provider, vault, txHash) {
   }
 
   const { from, token, amount, ownerhash, commitmentHash } = depositEvent.args;
-  const processedKey = `processed:${commitmentHash}`;
+  const processedKey = `processed:${txHash}`;
 
-  // ensure each commitment is processed only once
+  // ensure each tx is processed only once
   try {
     const already = await redis.get(processedKey);
     if (already) {
       console.log(
-        `⏭️ Commitment ${commitmentHash} already processed — skipping.`
+        `⏭️ Transaction ${commitmentHash} already processed — skipping.`
       );
       return;
     }
