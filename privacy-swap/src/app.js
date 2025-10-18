@@ -3,7 +3,6 @@ import { IExecDataProtectorDeserializer } from "@iexec/dataprotector-deserialize
 import { ethers } from "ethers";
 import { Redis } from "@upstash/redis";
 import { deposit } from "./deposit.js";
-// path/url not needed here; vault loading moved to utils/getVault
 import { getVault } from "./utils/getVault.js";
 import { swap } from "./swap.js";
 import { withdraw } from "./withdraw.js";
