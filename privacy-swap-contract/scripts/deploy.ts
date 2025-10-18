@@ -20,10 +20,17 @@ async function main() {
   console.log(`✅ Weth deployed at: ${await weth.getAddress()}`);
 
   // Mint some Weth to deployer and user for testing
-  await weth.connect(deployer).mint(deployerAddress, ethers.parseEther("100"));
-  console.log(`✅ Minted 100 Weth to deployer: ${deployerAddress}`);
-  await weth.connect(deployer).mint(userAddress, ethers.parseEther("100"));
-  console.log(`✅ Minted 100 Weth to user: ${userAddress}`);
+  const wethDepositNum = 100;
+  await weth
+    .connect(deployer)
+    .mint(deployerAddress, ethers.parseEther(wethDepositNum.toString()));
+  console.log(
+    `✅ Minted ${wethDepositNum} Weth to deployer: ${deployerAddress}`
+  );
+  await weth
+    .connect(deployer)
+    .mint(userAddress, ethers.parseEther(wethDepositNum.toString()));
+  console.log(`✅ Minted ${wethDepositNum} Weth to user: ${userAddress}`);
 
   // Deploy a test token first (for local testing)
   const Token = await ethers.getContractFactory("TestToken");
@@ -32,14 +39,17 @@ async function main() {
   console.log(`✅ USDC deployed at: ${await token.getAddress()}`);
 
   // Mint to deployer for testing
+  const usdcDepositNum = 100000;
   await token
     .connect(deployer)
-    .mint(deployer.address, ethers.parseEther("1000"));
-  console.log(`✅ Minted 1000 USDC to deployer: ${deployer.address}`);
+    .mint(deployer.address, ethers.parseEther(usdcDepositNum.toString()));
+  console.log(`✅ Minted 100000 USDC to deployer: ${deployer.address}`);
 
   // Mint to user for testing...
-  await token.connect(deployer).mint(userAddress, ethers.parseEther("1000"));
-  console.log(`✅ Minted 1000 USDC to user: ${userAddress}`);
+  await token
+    .connect(deployer)
+    .mint(userAddress, ethers.parseEther(usdcDepositNum.toString()));
+  console.log(`✅ Minted 100000 USDC to user: ${userAddress}`);
 
   // Deploy the ExecSwap
   const Vault = await ethers.getContractFactory("ExecSwap");
@@ -49,7 +59,6 @@ async function main() {
   console.log(`✅ ExecSwap deployed at: ${await vault.getAddress()}`);
 
   // Deposit some Weth to the vault for testing
-  const wethDepositNum = 100;
   const wethDepositAmount = ethers.parseEther(wethDepositNum.toString());
   await weth
     .connect(deployer)
@@ -68,7 +77,6 @@ async function main() {
   );
 
   // Deposit some USDC to the vault for testing
-  const usdcDepositNum = 500;
   const depositAmount = ethers.parseEther(usdcDepositNum.toString());
   await token
     .connect(deployer)
@@ -87,25 +95,25 @@ async function main() {
   );
 
   // User approve and deposit some Weth to the vault for testing
-  await weth
-    .connect(user)
-    .approve(await vault.getAddress(), wethDepositAmount, {
-      from: userAddress,
-    });
-  const userDepositTx = await vault
-    .connect(user)
-    .depositAndCommit(
-      await weth.getAddress(),
-      wethDepositAmount,
-      ethers.keccak256(ethers.toUtf8Bytes("userPublicKey")),
-      { from: userAddress }
-    );
-  console.log(
-    `✅ User deposited ${ethers.formatEther(
-      wethDepositAmount
-    )} WETH to ExecSwap vault`,
-    `(tx: ${userDepositTx.hash})`
-  );
+  // await weth
+  //   .connect(user)
+  //   .approve(await vault.getAddress(), wethDepositAmount, {
+  //     from: userAddress,
+  //   });
+  // const userDepositTx = await vault
+  //   .connect(user)
+  //   .depositAndCommit(
+  //     await weth.getAddress(),
+  //     wethDepositAmount,
+  //     ethers.keccak256(ethers.toUtf8Bytes("userPublicKey")),
+  //     { from: userAddress }
+  //   );
+  // console.log(
+  //   `✅ User deposited ${ethers.formatEther(
+  //     wethDepositAmount
+  //   )} WETH to ExecSwap vault`,
+  //   `(tx: ${userDepositTx.hash})`
+  // );
 
   // Update redis with latest reserves
   const redis = new Redis({
