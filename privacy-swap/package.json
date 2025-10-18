@@ -6,6 +6,14 @@
   "type": "module",
   "dependencies": {
     "@iexec/dataprotector-deserializer": "^0.1.1",
+    "@upstash/redis": "^1.35.6",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.15.0",
     "figlet": "^1.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0"
   }
 }

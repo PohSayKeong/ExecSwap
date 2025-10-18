@@ -2,13 +2,13 @@ import { network } from "hardhat";
 const { ethers } = await network.connect();
 
 async function main() {
-  const deployer = (await ethers.getSigners())[0];
+  const signers = await ethers.getSigners();
   console.log("🚀 Deploying ExecSwap...");
+  const user = signers[0];
+  const deployer = signers[1];
   const deployerAddress = deployer.address;
   console.log(`🔑 Deployer address: ${deployerAddress}`);
-  const userAddress = ethers.getAddress(
-    "0xbeBCEADf27DCf7119a827adfDF28F1c5c75fBD83"
-  );
+  const userAddress = user.address;
   console.log(`👤 User address: ${userAddress}`);
 
   // Deploy Weth (for local testing)
@@ -80,6 +80,27 @@ async function main() {
     `✅ Deployer deposited ${ethers.formatEther(
       depositAmount
     )} USDC to ExecSwap vault`
+  );
+
+  // User approve and deposit some Weth to the vault for testing
+  await weth
+    .connect(user)
+    .approve(await vault.getAddress(), wethDepositAmount, {
+      from: userAddress,
+    });
+  const userDepositTx = await vault
+    .connect(user)
+    .depositAndCommit(
+      await weth.getAddress(),
+      wethDepositAmount,
+      ethers.keccak256(ethers.toUtf8Bytes("userPublicKey")),
+      { from: userAddress }
+    );
+  console.log(
+    `✅ User deposited ${ethers.formatEther(
+      wethDepositAmount
+    )} WETH to ExecSwap vault`,
+    `(tx: ${userDepositTx.hash})`
   );
 
   console.log("🎉 Deployment complete!");

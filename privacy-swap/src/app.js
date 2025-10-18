@@ -1,39 +1,54 @@
 import fs from "node:fs/promises";
-import figlet from "figlet";
 import { IExecDataProtectorDeserializer } from "@iexec/dataprotector-deserializer";
+import { ethers } from "ethers";
+import { Redis } from "@upstash/redis";
+import { deposit } from "./deposit.js";
 
 const main = async () => {
-  const { IEXEC_OUT } = process.env;
+  const { IEXEC_OUT, IEXEC_APP_DEVELOPER_SECRET } = process.env;
+  const secrets = JSON.parse(IEXEC_APP_DEVELOPER_SECRET || "{}");
 
   let computedJsonObj = {};
 
   try {
     let messages = [];
 
-    // Example of process.argv:
-    // [ '/usr/local/bin/node', '/app/src/app.js', 'Bob' ]
-    const args = process.argv.slice(2);
-    console.log(`Received ${args.length} args`);
-    messages.push(args.join(" "));
+    const deserializer = new IExecDataProtectorDeserializer();
+    const functionType = await deserializer.getValue("function_type", "string");
+    const provider = new ethers.JsonRpcProvider(secrets.JSON_RPC_URL);
+    const redis = new Redis({
+      url: secrets.REDIS_URL,
+      token: secrets.REDIS_TOKEN,
+    });
 
-    try {
-      const deserializer = new IExecDataProtectorDeserializer();
-      // The protected data mock created for the purpose of this Hello World journey
-      // contains an object with a key "secretText" which is a string
-      const protectedName = await deserializer.getValue("secretText", "string");
-      console.log("Found a protected data");
-      messages.push(protectedName);
-    } catch (e) {
-      console.log("It seems there is an issue with your protected data:", e);
+    if (functionType === "deposit") {
+      console.log("Function type: deposit");
+
+      const vaultAddress = await deserializer.getValue(
+        "vault_address",
+        "string"
+      );
+      console.log("Vault Address:", vaultAddress);
+
+      const depositTx = await deserializer.getValue("deposit_tx", "string");
+      console.log("Deposit Tx:", depositTx);
+
+      const depositResult = await deposit(
+        redis,
+        provider,
+        vaultAddress,
+        depositTx
+      );
+
+      if (depositResult) {
+        messages.push("Deposit processed successfully");
+      } else {
+        throw new Error("Deposit processing failed");
+      }
     }
 
-    // Transform input text into an ASCII Art text
-    const asciiArtText = figlet.textSync(
-      `Hello, ${messages.join(" ") || "World"}!`
-    );
-
     // Write result to IEXEC_OUT
-    await fs.writeFile(`${IEXEC_OUT}/result.txt`, asciiArtText);
+    await fs.writeFile(`${IEXEC_OUT}/result.txt`, messages.join(","));
 
     // Build the "computed.json" object
     computedJsonObj = {
@@ -46,7 +61,7 @@ const main = async () => {
     // Build the "computed.json" object with an error message
     computedJsonObj = {
       "deterministic-output-path": IEXEC_OUT,
-      "error-message": "Oops something went wrong",
+      "error-message": e.message,
     };
   } finally {
     // Save the "computed.json" file
