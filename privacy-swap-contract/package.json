@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
+    "@upstash/redis": "^1.35.6",
+    "dotenv": "^17.2.3",
     "typechain": "^8.3.2"
   }
 }

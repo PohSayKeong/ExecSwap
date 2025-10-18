@@ -1,11 +1,13 @@
 import { network } from "hardhat";
+import { Redis } from "@upstash/redis";
+import "dotenv/config";
 const { ethers } = await network.connect();
 
 async function main() {
   const signers = await ethers.getSigners();
   console.log("🚀 Deploying ExecSwap...");
-  const user = signers[0];
-  const deployer = signers[1];
+  const deployer = signers[0];
+  const user = signers[1];
   const deployerAddress = deployer.address;
   console.log(`🔑 Deployer address: ${deployerAddress}`);
   const userAddress = user.address;
@@ -47,7 +49,8 @@ async function main() {
   console.log(`✅ ExecSwap deployed at: ${await vault.getAddress()}`);
 
   // Deposit some Weth to the vault for testing
-  const wethDepositAmount = ethers.parseEther("100");
+  const wethDepositNum = 100;
+  const wethDepositAmount = ethers.parseEther(wethDepositNum.toString());
   await weth
     .connect(deployer)
     .approve(await vault.getAddress(), wethDepositAmount);
@@ -65,7 +68,8 @@ async function main() {
   );
 
   // Deposit some USDC to the vault for testing
-  const depositAmount = ethers.parseEther("500");
+  const usdcDepositNum = 500;
+  const depositAmount = ethers.parseEther(usdcDepositNum.toString());
   await token
     .connect(deployer)
     .approve(await vault.getAddress(), depositAmount);
@@ -102,6 +106,15 @@ async function main() {
     )} WETH to ExecSwap vault`,
     `(tx: ${userDepositTx.hash})`
   );
+
+  // Update redis with latest reserves
+  const redis = new Redis({
+    url: process.env.REDIS_URL,
+    token: process.env.REDIS_TOKEN,
+  });
+  redis.set(await weth.getAddress(), wethDepositAmount.toString());
+  redis.set(await token.getAddress(), depositAmount.toString());
+  console.log("✅ Updated Upstash Redis with latest reserves");
 
   console.log("🎉 Deployment complete!");
 }

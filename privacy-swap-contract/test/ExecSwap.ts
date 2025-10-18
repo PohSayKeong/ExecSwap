@@ -107,14 +107,7 @@ describe("ExecSwap", function () {
     expect(await vault.commitments(commitment)).to.equal(true);
 
     // Nullify using owner secret
-    await vault
-      .connect(owner)
-      .updateCommitment(
-        [newCommitment],
-        [amount],
-        [await token.getAddress()],
-        [ownerPk]
-      );
+    await vault.connect(owner).updateCommitment([newCommitment], [commitment]);
 
     expect(await vault.commitments(commitment)).to.equal(false);
     expect(await vault.commitments(newCommitment)).to.equal(true);

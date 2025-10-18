@@ -81,21 +81,11 @@ contract ExecSwap is Ownable {
 
     /// @notice Owner can submit new commitments and nullify existing ones by providing owner secrets
     /// @param newCommitments array of commitments to add
-    /// @param nullifyAmounts amounts of commitments to nullify
-    /// @param nullifyTokens tokens of commitments to nullify
-    /// @param nullifyOwnerPks owner secret/public key bytes for verification
+    /// @param nullifyCommitments array of commitments to remove
     function updateCommitment(
         bytes32[] calldata newCommitments,
-        uint256[] calldata nullifyAmounts,
-        address[] calldata nullifyTokens,
-        bytes[] calldata nullifyOwnerPks
+        bytes32[] calldata nullifyCommitments
     ) external onlyOwner {
-        require(
-            nullifyAmounts.length == nullifyTokens.length &&
-                nullifyTokens.length == nullifyOwnerPks.length,
-            "length mismatch"
-        );
-
         for (uint256 i = 0; i < newCommitments.length; i++) {
             bytes32 c = newCommitments[i];
             require(c != bytes32(0), "empty add");
@@ -103,18 +93,12 @@ contract ExecSwap is Ownable {
             commitments[c] = true;
         }
 
-        bytes32[] memory removed = new bytes32[](nullifyAmounts.length);
-        for (uint256 i = 0; i < nullifyAmounts.length; i++) {
-            bytes32 ownerhash = keccak256(nullifyOwnerPks[i]);
-            bytes32 commitment = keccak256(
-                abi.encodePacked(nullifyAmounts[i], nullifyTokens[i], ownerhash)
-            );
-            require(commitments[commitment], "commitment not found");
-            commitments[commitment] = false;
-            removed[i] = commitment;
+        for (uint256 i = 0; i < nullifyCommitments.length; i++) {
+            require(commitments[nullifyCommitments[i]], "commitment not found");
+            commitments[nullifyCommitments[i]] = false;
         }
 
-        emit CommitmentsUpdated(newCommitments, removed);
+        emit CommitmentsUpdated(newCommitments, nullifyCommitments);
     }
 
     /// @notice Withdraw a series of revealed commitments that belong to the same owner (same ownerPk).

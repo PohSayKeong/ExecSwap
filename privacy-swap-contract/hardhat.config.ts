@@ -34,19 +34,25 @@ const config: HardhatUserConfig = {
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      accounts: {
+        mnemonic: configVariable("SEPOLIA_PRIVATE_KEY"),
+      },
     },
     arbitrumSepolia: {
       type: "http",
       chainType: "op",
       url: configVariable("ARBITRUM_SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      accounts: {
+        mnemonic: configVariable("SEPOLIA_PRIVATE_KEY"),
+      },
     },
     localhost: {
       type: "http",
       chainType: "op",
       url: "http://localhost:8545",
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      accounts: {
+        mnemonic: configVariable("SEPOLIA_PRIVATE_KEY"),
+      },
     },
   },
   typechain: {

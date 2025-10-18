@@ -19,7 +19,7 @@ encodeFunctionData(functionFragment: 'owner', values?: undefined): string;
 encodeFunctionData(functionFragment: 'renounceOwnership', values?: undefined): string;
 encodeFunctionData(functionFragment: 'spent', values: [BytesLike]): string;
 encodeFunctionData(functionFragment: 'transferOwnership', values: [AddressLike]): string;
-encodeFunctionData(functionFragment: 'updateCommitment', values: [BytesLike[], BigNumberish[], AddressLike[], BytesLike[]]): string;
+encodeFunctionData(functionFragment: 'updateCommitment', values: [BytesLike[], BytesLike[]]): string;
 encodeFunctionData(functionFragment: 'withdraw', values: [BigNumberish[], AddressLike, BytesLike[], BytesLike, AddressLike]): string;
 
     decodeFunctionResult(functionFragment: 'commitmentOf', data: BytesLike): Result;
@@ -191,7 +191,7 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
 
     
     updateCommitment: TypedContractMethod<
-      [newCommitments: BytesLike[], nullifyAmounts: BigNumberish[], nullifyTokens: AddressLike[], nullifyOwnerPks: BytesLike[], ],
+      [newCommitments: BytesLike[], nullifyCommitments: BytesLike[], ],
       [void],
       'nonpayable'
     >
@@ -254,7 +254,7 @@ getFunction(nameOrSignature: 'transferOwnership'): TypedContractMethod<
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'updateCommitment'): TypedContractMethod<
-      [newCommitments: BytesLike[], nullifyAmounts: BigNumberish[], nullifyTokens: AddressLike[], nullifyOwnerPks: BytesLike[], ],
+      [newCommitments: BytesLike[], nullifyCommitments: BytesLike[], ],
       [void],
       'nonpayable'
     >;
