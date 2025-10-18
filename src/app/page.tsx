@@ -9,8 +9,8 @@ import {
   ProtectedData,
   GrantedAccess,
 } from "@iexec/dataprotector";
-import WelcomeBlock from "@/components/WelcomeBlock";
 import wagmiNetworks, { explorerSlugs } from "@/config/wagmiNetworks";
+import PrivacySwap from "@/components/privacy-swap";
 
 // External Link Icon Component
 const ExternalLinkIcon = () => (
@@ -221,12 +221,14 @@ export default function Home() {
         </div>
       </nav>
 
-      <WelcomeBlock />
-
       <section className="p-8 bg-[#F4F7FC] rounded-xl">
         {isConnected ? (
           <div>
             <h2 className="mb-6 text-2xl font-semibold text-gray-800">
+              {/* Privacy Swap UI (WETH -> USDC) */}
+              <div className="mt-12">
+                <PrivacySwap />
+              </div>
               Protect my data
             </h2>
             <form onSubmit={protectData} className="mb-8">
@@ -430,9 +432,7 @@ export default function Home() {
                       required
                     />
                     <div className="text-xs text-gray-500 mt-2 space-y-1">
-                      <p>
-                        iApp authorized to access your protected data.
-                      </p>
+                      <p>iApp authorized to access your protected data.</p>
                       <p className="text-gray-400 mt-1">
                         iApp addresses vary by chain. Always verify before
                         granting access.
@@ -562,7 +562,8 @@ export default function Home() {
                       <strong>Volume:</strong> {grantedAccess.volume}
                     </p>
                     <p>
-                      <strong>iApp Restrict:</strong> {grantedAccess.apprestrict}
+                      <strong>iApp Restrict:</strong>{" "}
+                      {grantedAccess.apprestrict}
                     </p>
                     <p>
                       <strong>Workerpool Restrict:</strong>{" "}
