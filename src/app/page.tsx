@@ -183,11 +183,11 @@ export default function Home() {
       <nav className="bg-[#F4F7FC] rounded-xl p-4 mb-8 flex justify-between items-center">
         <div className="flex items-center gap-6">
           <div className="font-mono text-xl font-bold text-gray-800">
-            iExec NextJs Starter
+            ExecSwap
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {isConnected && (
+          {/* {isConnected && (
             <div className="flex items-center gap-2">
               <label
                 htmlFor="chain-selector"
@@ -208,7 +208,7 @@ export default function Home() {
                 ))}
               </select>
             </div>
-          )}
+          )} */}
           {!isConnected ? (
             <button onClick={login} className="primary">
               Connect my wallet
@@ -221,16 +221,15 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="p-8 bg-[#F4F7FC] rounded-xl">
+      {isConnected && (
+        <section className="p-8 bg-[#F4F7FC] rounded-xl">
+          <PrivacySwap />
+        </section>
+      )}
+
+      <section className="mt-8 p-8 bg-[#F4F7FC] rounded-xl">
         {isConnected ? (
           <div>
-            <h2 className="mb-6 text-2xl font-semibold text-gray-800">
-              {/* Privacy Swap UI (WETH -> USDC) */}
-              <div className="mt-12">
-                <PrivacySwap />
-              </div>
-              Protect my data
-            </h2>
             <form onSubmit={protectData} className="mb-8">
               <div className="mb-5">
                 <label

@@ -3,6 +3,8 @@ import React from "react";
 import Label from "@/components/ui/Label";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import Image from "next/image";
+import wethImg from "@/images/weth.png";
 
 type TokenInputProps = {
   tokenSymbol: string;
@@ -18,24 +20,37 @@ export default function TokenInput({
   balance,
 }: TokenInputProps) {
   return (
-    <div className="border rounded p-3">
+    <div className="bg-white rounded-lg p-4 shadow-sm ring-1 ring-gray-100">
       <Label>From</Label>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4 mt-2">
         <div className="flex-1">
-          <Input
-            value={value}
-            onChange={(e: any) => onChange(e.target.value)}
-            placeholder={`0.0 ${tokenSymbol}`}
-            inputMode="decimal"
-          />
-          <div className="text-xs text-gray-500 mt-1">
-            Balance: {balance ?? "—"} {tokenSymbol}
+          <div className="flex items-center gap-3">
+            <Image
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold"
+              src={wethImg}
+              alt={tokenSymbol}
+              width={40}
+              height={40}
+            />
+            <Input
+              value={value}
+              onChange={(e: any) => onChange(e.target.value)}
+              placeholder={`0.0 ${tokenSymbol}`}
+              inputMode="decimal"
+              className="text-lg font-medium flex-1"
+            />
           </div>
-        </div>
-        <div className="w-24 text-right font-medium">
-          {tokenSymbol}
-          <div>
-            <Button className="mt-2 text-xs">Use max</Button>
+          <div className="flex justify-between">
+            <div className="text-xs text-gray-500 mt-1 ml-14 py-2">
+              Balance:{" "}
+              <span className="font-medium text-gray-700">
+                {balance ?? "—"}
+              </span>{" "}
+              {tokenSymbol}
+            </div>
+            <Button className="text-xs py-1 px-0" variant="ghost">
+              Max
+            </Button>
           </div>
         </div>
       </div>
