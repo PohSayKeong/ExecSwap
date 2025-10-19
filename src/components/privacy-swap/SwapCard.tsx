@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { ethers } from "ethers";
+import { WETH } from "@/config/tokens";
 import TokenInput from "./TokenInput";
 import Button from "@/components/ui/Button";
 import USDCImg from "@/images/usdc.png";
@@ -34,6 +36,27 @@ export default function SwapCard({
   balances,
   txState,
 }: SwapCardProps) {
+  const [committedBalance, setCommittedBalance] = React.useState<string | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    try {
+      const all = JSON.parse(localStorage.getItem("commitments") || "[]");
+      const sumByAddress = all
+        .filter(
+          (c: any) => c.token && c.token.toLowerCase() === WETH.toLowerCase()
+        )
+        .reduce((acc: bigint, c: any) => acc + BigInt(c.amount), BigInt(0));
+      const sumBySymbol = all
+        .filter((c: any) => c.token === "WETH")
+        .reduce((acc: bigint, c: any) => acc + BigInt(c.amount), BigInt(0));
+      const finalSum = sumByAddress > BigInt(0) ? sumByAddress : sumBySymbol;
+      setCommittedBalance(ethers.formatUnits(finalSum.toString(), 18));
+    } catch {
+      setCommittedBalance(null);
+    }
+  }, [txState, fromAmount]);
   // compute UI-only minimum out based on slippage and estimatedOut (strings)
   const computeMinOut = () => {
     if (!estimatedOut) return null;
@@ -44,6 +67,20 @@ export default function SwapCard({
   };
 
   const minOut = computeMinOut();
+
+  // determine if user has sufficient committed balance to swap
+  let insufficient = false;
+  try {
+    const availableStr = committedBalance ?? balances?.contract?.WETH ?? "0";
+    const availableUnits = ethers.parseUnits(availableStr || "0", 18);
+    const requestedUnits = ethers.parseUnits(fromAmount || "0", 18);
+    if (BigInt(requestedUnits.toString()) > BigInt(availableUnits.toString())) {
+      insufficient = true;
+    }
+  } catch {
+    // parse errors -> treat as insufficient to be safe
+    insufficient = true;
+  }
 
   return (
     <div className="bg-gradient-to-b from-white to-gray-50 shadow-lg rounded-2xl p-6">
@@ -60,7 +97,7 @@ export default function SwapCard({
         tokenSymbol="WETH"
         value={fromAmount}
         onChange={(v: string) => setFromAmount(v)}
-        balance={balances?.wallet?.WETH}
+        balance={committedBalance ?? balances?.contract?.WETH}
       />
 
       <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
@@ -69,30 +106,42 @@ export default function SwapCard({
             <div className="flex-1 p-3 bg-white rounded-lg shadow-sm ring-1 ring-gray-100">
               <div className="text-xs text-gray-500">Estimated out</div>
               <div className="mt-1 text-lg font-medium">
-                {estimatedOut ?? "—"}
-                <Image
-                  className="mx-1 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 items-center justify-center text-white font-semibold inline-block"
-                  src={USDCImg}
-                  alt="USDC"
-                  width={24}
-                  height={24}
-                />
-                USDC
+                {estimatedOut ? (
+                  <>
+                    {estimatedOut}
+                    <Image
+                      className="mx-1 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 items-center justify-center text-white font-semibold inline-block"
+                      src={USDCImg}
+                      alt="USDC"
+                      width={24}
+                      height={24}
+                    />
+                    USDC
+                  </>
+                ) : (
+                  "—"
+                )}
               </div>
             </div>
 
-            <div className="w-40 p-3 bg-white rounded-lg shadow-sm ring-1 ring-gray-100">
+            <div className="w-1/2 p-3 bg-white rounded-lg shadow-sm ring-1 ring-gray-100">
               <div className="text-xs text-gray-500">Minimum out</div>
               <div className="mt-1 text-lg font-medium">
-                {minOut ?? "—"}
-                <Image
-                  className="mx-1 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 items-center justify-center text-white font-semibold inline-block"
-                  src={USDCImg}
-                  alt="USDC"
-                  width={24}
-                  height={24}
-                />
-                USDC
+                {minOut ? (
+                  <>
+                    {minOut}
+                    <Image
+                      className="mx-1 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 items-center justify-center text-white font-semibold inline-block"
+                      src={USDCImg}
+                      alt="USDC"
+                      width={24}
+                      height={24}
+                    />
+                    USDC
+                  </>
+                ) : (
+                  "—"
+                )}
               </div>
               <div className="text-xs text-gray-400 mt-1">
                 Slippage: {slippage}%
@@ -155,10 +204,10 @@ export default function SwapCard({
       <div className="mt-5 flex items-center justify-between">
         <Button
           onClick={onSwap}
-          className="w-40 py-2 bg-black text-white rounded-lg shadow"
-          disabled={!fromAmount || parseFloat(fromAmount) <= 0}
+          className="min-w-40 py-2 bg-black text-white rounded-lg shadow"
+          disabled={!fromAmount || parseFloat(fromAmount) <= 0 || insufficient}
         >
-          Swap
+          {insufficient ? "Insufficient committed funds" : "Swap"}
         </Button>
 
         <div className="text-sm text-gray-500">{txState?.status ?? "idle"}</div>

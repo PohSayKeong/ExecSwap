@@ -156,7 +156,11 @@ export function useWithdraw(vaultAddress: string) {
           protectedData,
           ...grantAccessData,
         });
-        setTxState({ status: protectedData });
+        console.log("Data protected at address:", protectedData);
+        setTxState({ status: "withdrawal successful", txHash: tx.hash });
+        setTimeout(() => {
+          setTxState({ status: "idle" });
+        }, 5000);
 
         setWithdrawOpen(false);
         getBalances();

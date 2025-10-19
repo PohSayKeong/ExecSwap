@@ -48,7 +48,11 @@ export default function TokenInput({
               </span>{" "}
               {tokenSymbol}
             </div>
-            <Button className="text-xs py-1 px-0" variant="ghost">
+            <Button
+              className="text-xs py-1 px-0"
+              variant="ghost"
+              onClick={() => onChange(balance || "0")}
+            >
               Max
             </Button>
           </div>

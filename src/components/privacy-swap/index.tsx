@@ -14,7 +14,6 @@ export default function PrivacySwap() {
   useEffect(() => {
     getBalances();
   }, [getBalances]);
-  console.log(ui);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -26,7 +25,27 @@ export default function PrivacySwap() {
         setSlippage={ui.setSlippage}
         onOpenDeposit={() => ui.setDepositOpen(true)}
         onOpenWithdraw={() => ui.setWithdrawOpen(true)}
-        onSwap={() => ui.triggerSwap()}
+        onSwap={async () => {
+          try {
+            const { parseUnits } = await import("ethers");
+            const tokenAmountIn = parseUnits(ui.fromAmount || "0", 18);
+            const minOutStr = ui.estimatedOut
+              ? (
+                  parseFloat(ui.estimatedOut) *
+                  (1 - ui.slippage / 100)
+                ).toString()
+              : "0";
+            const minimumTokenOut = parseUnits(minOutStr, 18);
+            await ui.performSwap({
+              tokenIn: (await import("@/config/tokens")).WETH,
+              tokenOut: (await import("@/config/tokens")).USDC,
+              tokenAmountIn: BigInt(tokenAmountIn.toString()),
+              minimumTokenOut: BigInt(minimumTokenOut.toString()),
+            });
+          } catch (err) {
+            console.error("performSwap failed", err);
+          }
+        }}
         balances={ui.balances}
         txState={ui.txState}
       />

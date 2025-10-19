@@ -95,25 +95,25 @@ async function main() {
   );
 
   // User approve and deposit some Weth to the vault for testing
-  // await weth
-  //   .connect(user)
-  //   .approve(await vault.getAddress(), wethDepositAmount, {
-  //     from: userAddress,
-  //   });
-  // const userDepositTx = await vault
-  //   .connect(user)
-  //   .depositAndCommit(
-  //     await weth.getAddress(),
-  //     wethDepositAmount,
-  //     ethers.keccak256(ethers.toUtf8Bytes("userPublicKey")),
-  //     { from: userAddress }
-  //   );
-  // console.log(
-  //   `✅ User deposited ${ethers.formatEther(
-  //     wethDepositAmount
-  //   )} WETH to ExecSwap vault`,
-  //   `(tx: ${userDepositTx.hash})`
-  // );
+  await weth
+    .connect(user)
+    .approve(await vault.getAddress(), wethDepositAmount, {
+      from: userAddress,
+    });
+  const userDepositTx = await vault
+    .connect(user)
+    .depositAndCommit(
+      await weth.getAddress(),
+      wethDepositAmount,
+      ethers.keccak256(ethers.toUtf8Bytes("userPublicKey")),
+      { from: userAddress }
+    );
+  console.log(
+    `✅ User deposited ${ethers.formatEther(
+      wethDepositAmount
+    )} WETH to ExecSwap vault`,
+    `(tx: ${userDepositTx.hash})`
+  );
 
   // Update redis with latest reserves
   const redis = new Redis({

@@ -2,12 +2,12 @@
   "commitments": [
     {
       "amount": 100000000000000000000,
-      "token": "0x167742649592dEB298Af317b1aEd97D9dADD02a5",
+      "token": "0x108E8CaD9d3775E27584359a697093bbB53C23E3",
       "ownerhash": "0x63e2d5915e06ecad00a7e6c33ebb95356872e5f7d20e08626b2e5081d203baad"
     }
   ],
-  "tokenIn": "0x167742649592dEB298Af317b1aEd97D9dADD02a5",
-  "tokenOut": "0xe66e997e999acc3D7a48Fee6a03198e43dA1ED6f",
+  "tokenIn": "0x108E8CaD9d3775E27584359a697093bbB53C23E3",
+  "tokenOut": "0x30dd0C0204607C1E728b37F46e5D4E187b631a4B",
   "tokenAmountIn": 100000000000000000,
   "minimumTokenOut": 300000000000000000000,
   "ownerhash": "0x63e2d5915e06ecad00a7e6c33ebb95356872e5f7d20e08626b2e5081d203baad"
