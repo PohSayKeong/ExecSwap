@@ -92,3 +92,7 @@ This document describes mock payloads for interacting with the **IApp** interfac
   "withdraw_tx": "0xWithdrawTransactionHash"
 }
 ```
+
+## iApp example appsecret
+
+"appSecret": "{\"REDIS_URL\":\"xxx",\"REDIS_TOKEN\":\"xxx\",\"JSON_RPC_URL\":\"xxx",\"PRIVATE_KEY\":\"xxx\"}",
