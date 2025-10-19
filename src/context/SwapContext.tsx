@@ -26,9 +26,9 @@ type SwapContextType = {
   setWithdrawOpen: (b: boolean) => void;
   deposit: { token: string; amount: string };
   setDeposit: Dispatch<React.SetStateAction<{ token: string; amount: string }>>;
-  withdraw: { token: string; amount: string };
+  withdraw: { token: string; commitment: string };
   setWithdraw: Dispatch<
-    React.SetStateAction<{ token: string; amount: string }>
+    React.SetStateAction<{ token: string; commitment: string }>
   >;
   balances: {
     wallet: { WETH: string; USDC: string };
@@ -59,7 +59,11 @@ export function SwapProvider({ children }: { children: React.ReactNode }) {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const [deposit, setDeposit] = useState({ token: "WETH", amount: "" });
-  const [withdraw, setWithdraw] = useState({ token: "USDC", amount: "" });
+  const [withdraw, setWithdraw] = useState({
+    token: "WETH",
+    commitment: "",
+    to: "",
+  });
 
   const [balances, setBalances] = useState({
     wallet: { WETH: "0.0", USDC: "0.0" },

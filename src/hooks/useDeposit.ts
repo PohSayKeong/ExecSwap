@@ -136,8 +136,7 @@ export function useDeposit(vaultAddress: string) {
         const { address: protectedData } = await dataProtectorCore.protectData({
           data: {
             vault_address: VAULT,
-            deposit_tx:
-              "0x52ae192a90724f9c09c612c5517790f781c9be807d3bb4209cbbc20a1b1810ad",
+            deposit_tx: tx.hash,
           },
         });
 
