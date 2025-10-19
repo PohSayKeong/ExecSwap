@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useDisconnect, useChainId, useSwitchChain } from "wagmi";
-import {
-  IExecDataProtector,
-  IExecDataProtectorCore,
-  ProtectedData,
-  GrantedAccess,
-} from "@iexec/dataprotector";
-import wagmiNetworks, { explorerSlugs } from "@/config/wagmiNetworks";
+import { useAccount, useDisconnect, useChainId } from "wagmi";
+import { ProtectedData, GrantedAccess } from "@iexec/dataprotector";
+import { useDataProtector } from "@/hooks/useDataProtector";
+import { explorerSlugs } from "@/config/wagmiNetworks";
 import PrivacySwap from "@/components/privacy-swap";
+import { SwapProvider } from "@/context/SwapContext";
 
 // External Link Icon Component
 const ExternalLinkIcon = () => (
@@ -33,12 +30,10 @@ const ExternalLinkIcon = () => (
 export default function Home() {
   const { open } = useAppKit();
   const { disconnectAsync } = useDisconnect();
-  const { isConnected, connector, address } = useAccount();
+  const { isConnected, address } = useAccount();
   const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
 
-  const [dataProtectorCore, setDataProtectorCore] =
-    useState<IExecDataProtectorCore | null>(null);
+  const { dataProtectorCore } = useDataProtector();
   const [dataToProtect, setDataToProtect] = useState({
     name: "",
     data: "",
@@ -63,8 +58,6 @@ export default function Home() {
   const [grantedAccess, setGrantedAccess] = useState<GrantedAccess>();
   const [isGrantingAccess, setIsGrantingAccess] = useState(false);
 
-  const networks = Object.values(wagmiNetworks);
-
   const login = () => {
     open({ view: "Connect" });
   };
@@ -74,19 +67,6 @@ export default function Home() {
       await disconnectAsync();
     } catch (err) {
       console.error("Failed to logout:", err);
-    }
-  };
-
-  const handleChainChange = async (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedChainId = parseInt(event.target.value);
-    if (selectedChainId && selectedChainId !== chainId && switchChain) {
-      try {
-        await switchChain({ chainId: selectedChainId });
-      } catch (error) {
-        console.error("Failed to switch chain:", error);
-      }
     }
   };
 
@@ -106,25 +86,6 @@ export default function Home() {
     if (!address) return `https://explorer.iex.ec/${explorerSlug}/${type}`;
     return `https://explorer.iex.ec/${explorerSlug}/${type}/${address}`;
   };
-
-  useEffect(() => {
-    const initializeDataProtector = async () => {
-      if (isConnected && connector) {
-        try {
-          const provider =
-            (await connector.getProvider()) as import("ethers").Eip1193Provider;
-          const dataProtector = new IExecDataProtector(provider, {
-            allowExperimentalNetworks: true,
-          });
-          setDataProtectorCore(dataProtector.core);
-        } catch (error) {
-          console.error("Failed to initialize data protector:", error);
-        }
-      }
-    };
-
-    initializeDataProtector();
-  }, [isConnected, connector]);
 
   const grantDataAccess = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -223,7 +184,9 @@ export default function Home() {
 
       {isConnected && (
         <section className="p-8 bg-[#F4F7FC] rounded-xl">
-          <PrivacySwap />
+          <SwapProvider>
+            <PrivacySwap />
+          </SwapProvider>
         </section>
       )}
 

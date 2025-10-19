@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import SwapCard from "./SwapCard";
 import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
@@ -8,6 +8,13 @@ import { useSwapUI } from "../../hooks/useSwapUI";
 
 export default function PrivacySwap() {
   const ui = useSwapUI();
+  const { getBalances } = ui;
+
+  // Effect to fetch balances
+  useEffect(() => {
+    getBalances();
+  }, [getBalances]);
+  console.log(ui);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -29,7 +36,6 @@ export default function PrivacySwap() {
         onClose={() => ui.setDepositOpen(false)}
         depositState={ui.deposit}
         setDepositState={ui.setDeposit}
-        onDeposit={() => ui.triggerDeposit()}
         balances={ui.balances}
       />
 
@@ -42,7 +48,7 @@ export default function PrivacySwap() {
         balances={ui.balances}
       />
 
-      <TransactionStatusToast txState={ui.txState} />
+      <TransactionStatusToast />
     </div>
   );
 }
